@@ -1,0 +1,24 @@
+{
+  "name": "nearx-token-passkey-frontend",
+  "version": "1.0.0",
+  "description": "Frontend simples com integração passkey para autenticação",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "start": "python3 -m http.server 8000"
+  },
+  "dependencies": {
+    "passkey-kit": "^0.3.0",
+    "@stellar/stellar-sdk": "^12.0.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "passkey",
+    "stellar",
+    "authentication",
+    "nearx"
+  ],
+  "author": "NearX Team",
+  "license": "MIT"
+}
