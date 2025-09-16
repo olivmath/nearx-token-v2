@@ -1,131 +1,161 @@
-// Configuração do Stellar e Passkey Kit
-const STELLAR_CONFIG = {
-    rpcUrl: 'https://soroban-testnet.stellar.org',
-    networkPassphrase: 'Test SDF Network ; September 2015',
-    factoryContractId: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQAHHAGK6Z6E' // Contract de exemplo
-};
+// Aplicação NearX Token com Touch ID
+import { passkeyService } from './services/PasskeyService.js';
+import { TouchIDModal } from './components/TouchIDModal.js';
 
-class PasskeyAuth {
+class NearXApp {
     constructor() {
-        this.passkeyKit = null;
-        this.isLoggedIn = false;
-        this.currentAccount = null;
+        this.touchIDModal = new TouchIDModal();
+        this.isAuthenticating = false;
+        this.currentUser = null;
         this.init();
     }
 
     async init() {
         try {
-            // Importar passkey-kit dinamicamente
-            const { PasskeyKit } = await import('https://unpkg.com/passkey-kit@latest/dist/index.js');
-            
-            this.passkeyKit = new PasskeyKit(STELLAR_CONFIG);
-            console.log('PasskeyKit inicializado com sucesso');
+            console.log('🚀 Inicializando NearX Token App...');
             
             // Verificar se já existe uma sessão ativa
             this.checkExistingSession();
             
+            // Configurar event listeners
+            this.setupEventListeners();
+            
+            console.log('✅ NearX Token App inicializado com sucesso');
+            
         } catch (error) {
-            console.error('Erro ao inicializar PasskeyKit:', error);
-            this.showError('Erro ao inicializar sistema de autenticação');
+            console.error('❌ Erro ao inicializar aplicação:', error);
+            this.showError('Erro ao inicializar aplicação');
         }
-        
-        this.setupEventListeners();
     }
 
     setupEventListeners() {
         const loginBtn = document.getElementById('loginBtn');
+        const createBtn = document.getElementById('createBtn');
         const logoutBtn = document.getElementById('logoutBtn');
 
         loginBtn?.addEventListener('click', () => this.handleLogin());
+        createBtn?.addEventListener('click', () => this.handleCreateWallet());
         logoutBtn?.addEventListener('click', () => this.handleLogout());
     }
 
     async handleLogin() {
+        if (this.isAuthenticating) return;
+        
+        this.isAuthenticating = true;
+        this.showLoading(true);
+        this.hideError();
+        this.touchIDModal.show();
+        
         try {
-            this.showLoading(true);
-            this.hideError();
+            console.log('🍎 Iniciando login com Touch ID...');
             
-            console.log('Iniciando processo de login...');
+            // Tentar conectar com carteira existente
+            const user = await passkeyService.connectWallet();
             
-            // Simular criação/login com passkey
-            // Em um cenário real, você usaria os métodos do passkey-kit
-            const mockAccount = await this.simulatePasskeyLogin();
-            
-            if (mockAccount) {
-                this.currentAccount = mockAccount;
-                this.isLoggedIn = true;
+            if (user) {
+                this.currentUser = user;
                 this.showLoggedScreen();
-                console.log('Login realizado com sucesso!');
+                console.log('✅ Login realizado com sucesso!', user);
+            } else {
+                this.showError('Nenhuma carteira encontrada. Crie uma nova carteira primeiro.');
             }
             
         } catch (error) {
-            console.error('Erro no login:', error);
-            this.showError('Erro ao fazer login. Tente novamente.');
+            console.error('❌ Erro no login:', error);
+            this.showError('Erro ao fazer login: ' + error.message);
         } finally {
+            this.isAuthenticating = false;
             this.showLoading(false);
+            this.touchIDModal.hide();
         }
     }
 
-    async simulatePasskeyLogin() {
-        // Simular delay de autenticação
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    async handleCreateWallet() {
+        if (this.isAuthenticating) return;
         
-        // Simular criação de conta com passkey
-        return {
-            publicKey: 'GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-            contractId: 'CXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-            timestamp: new Date().toISOString()
-        };
+        this.isAuthenticating = true;
+        this.showLoading(true);
+        this.hideError();
+        this.touchIDModal.show();
+        
+        try {
+            console.log('✨ Criando nova carteira com Touch ID...');
+            
+            // Criar nova carteira
+            const user = await passkeyService.createWallet();
+            
+            if (user) {
+                this.currentUser = user;
+                this.showLoggedScreen();
+                console.log('✅ Carteira criada com sucesso!', user);
+            }
+            
+        } catch (error) {
+            console.error('❌ Erro ao criar carteira:', error);
+            this.showError('Erro ao criar carteira: ' + error.message);
+        } finally {
+            this.isAuthenticating = false;
+            this.showLoading(false);
+            this.touchIDModal.hide();
+        }
     }
 
-    handleLogout() {
-        this.isLoggedIn = false;
-        this.currentAccount = null;
-        this.showLoginScreen();
-        console.log('Logout realizado com sucesso!');
+
+    async handleLogout() {
+        try {
+            await passkeyService.disconnect();
+            this.currentUser = null;
+            this.showLoginScreen();
+            console.log('✅ Logout realizado com sucesso!');
+        } catch (error) {
+            console.error('❌ Erro no logout:', error);
+            // Mesmo com erro, limpar a sessão local
+            this.currentUser = null;
+            this.showLoginScreen();
+        }
     }
 
     checkExistingSession() {
-        // Verificar se existe sessão salva no localStorage
-        const savedSession = localStorage.getItem('nearx-passkey-session');
-        if (savedSession) {
-            try {
-                this.currentAccount = JSON.parse(savedSession);
-                this.isLoggedIn = true;
-                this.showLoggedScreen();
-            } catch (error) {
-                console.error('Erro ao recuperar sessão:', error);
-                localStorage.removeItem('nearx-passkey-session');
-            }
+        // Verificar se existe usuário salvo
+        const storedUser = passkeyService.loadStoredUser();
+        if (storedUser) {
+            this.currentUser = storedUser;
+            this.showLoggedScreen();
+            console.log('✅ Sessão restaurada:', storedUser);
         }
     }
 
     showLoginScreen() {
         document.getElementById('loginScreen').style.display = 'block';
         document.getElementById('loggedScreen').style.display = 'none';
-        localStorage.removeItem('nearx-passkey-session');
     }
 
     showLoggedScreen() {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('loggedScreen').style.display = 'block';
         
-        // Salvar sessão
-        if (this.currentAccount) {
-            localStorage.setItem('nearx-passkey-session', JSON.stringify(this.currentAccount));
+        // Atualizar informações do usuário
+        if (this.currentUser) {
+            document.getElementById('userName').textContent = this.currentUser.displayName;
+            document.getElementById('contractAddress').textContent = this.currentUser.contractAddress;
+            document.getElementById('keyId').textContent = this.currentUser.keyIdBase64;
+            document.getElementById('connectedAt').textContent = new Date(this.currentUser.timestamp).toLocaleString('pt-BR');
         }
     }
 
     showLoading(show) {
         const loading = document.getElementById('loading');
         const loginBtn = document.getElementById('loginBtn');
+        const createBtn = document.getElementById('createBtn');
         
         if (show) {
             loading.style.display = 'block';
             loginBtn.disabled = true;
+            createBtn.disabled = true;
         } else {
             loading.style.display = 'none';
             loginBtn.disabled = false;
+            createBtn.disabled = false;
         }
     }
 
@@ -141,17 +171,41 @@ class PasskeyAuth {
     }
 }
 
+// Função global para copiar texto
+window.copyToClipboard = async function(elementId) {
+    try {
+        const element = document.getElementById(elementId);
+        const text = element.textContent;
+        await navigator.clipboard.writeText(text);
+        
+        // Mostrar feedback visual
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copiado!';
+        button.style.background = '#28a745';
+        
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '#28a745';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Erro ao copiar:', error);
+        alert('Erro ao copiar para a área de transferência');
+    }
+};
+
 // Inicializar a aplicação quando o DOM estiver carregado
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Inicializando NearX Token Passkey Auth...');
-    new PasskeyAuth();
+    console.log('🚀 Inicializando NearX Token App...');
+    new NearXApp();
 });
 
 // Fallback para garantir que a aplicação seja inicializada
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        new PasskeyAuth();
+        new NearXApp();
     });
 } else {
-    new PasskeyAuth();
+    new NearXApp();
 }

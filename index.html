@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Passkey Auth - NearX Token</title>
+    <title>NearX Token - Touch ID Authentication</title>
     <style>
         * {
             margin: 0;
@@ -26,7 +26,7 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
         }
 
@@ -103,6 +103,40 @@
             border-radius: 5px;
             display: none;
         }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: left;
+        }
+
+        .user-info h3 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-info p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0.25rem 0;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
@@ -111,24 +145,34 @@
         
         <!-- Tela de Login -->
         <div id="loginScreen" class="login-screen">
-            <h2>Faça seu login</h2>
-            <p>Use sua passkey para acessar</p>
+            <h2>🔐 NearX Token</h2>
+            <p>Autenticação segura com Touch ID</p>
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Processando...</p>
+                <p>Inicializando Touch ID...</p>
             </div>
             <div class="error" id="error"></div>
-            <button id="loginBtn" class="btn">🔑 Login com Passkey</button>
+            <button id="loginBtn" class="btn">🍎 Login com Touch ID</button>
+            <button id="createBtn" class="btn" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">✨ Criar Nova Carteira</button>
         </div>
 
         <!-- Tela Logado -->
         <div id="loggedScreen" class="logged-screen">
-            <div class="success-message">✅ VC LOGOU!</div>
-            <p>Bem-vindo ao sistema!</p>
-            <button id="logoutBtn" class="btn">🚪 Logout</button>
+            <div class="success-message">✅ Autenticado com Touch ID!</div>
+            <p>Bem-vindo ao NearX Token</p>
+            
+            <div class="user-info" id="userInfo">
+                <h3>📱 Informações da Carteira</h3>
+                <p><strong>Nome:</strong> <span id="userName">-</span></p>
+                <p><strong>Contrato:</strong> <span id="contractAddress">-</span> <button class="copy-btn" onclick="copyToClipboard('contractAddress')">Copiar</button></p>
+                <p><strong>Key ID:</strong> <span id="keyId">-</span> <button class="copy-btn" onclick="copyToClipboard('keyId')">Copiar</button></p>
+                <p><strong>Conectado em:</strong> <span id="connectedAt">-</span></p>
+            </div>
+            
+            <button id="logoutBtn" class="btn">🚪 Desconectar</button>
         </div>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="/app.js"></script>
 </body>
 </html>

@@ -1,23 +1,32 @@
 {
   "name": "nearx-token-passkey-frontend",
-  "version": "1.0.0",
-  "description": "Frontend simples com integração passkey para autenticação",
+  "version": "2.0.0",
+  "description": "Frontend NearX Token com Touch ID e Passkey real",
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "dev": "python3 -m http.server 8000",
-    "start": "python3 -m http.server 8000"
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "cd server && npm start",
+    "start:full": "concurrently \"npm run server\" \"npm run dev\" --names \"API,WEB\" --prefix-colors \"blue,green\""
   },
   "dependencies": {
     "passkey-kit": "^0.3.0",
-    "@stellar/stellar-sdk": "^12.0.0"
+    "@stellar/stellar-sdk": "^12.0.0",
+    "concurrently": "^8.2.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
   "keywords": [
     "passkey",
+    "touch-id",
     "stellar",
     "authentication",
-    "nearx"
+    "nearx",
+    "webauthn"
   ],
   "author": "NearX Team",
   "license": "MIT"
